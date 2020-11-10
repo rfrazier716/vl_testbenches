@@ -71,6 +71,7 @@ void SyncTB<T>::addVCDTrace(const char* traceName)
 template<class T>
 SyncTB<T>::SyncTB(int fClock, bool trace): traceOutput(trace), clockFrequency(fClock){
     dut = new T; // Assign the model the testbench manipulates
+    dut->eval(); // Evaluate it so default states update
     tickCount=0; // set the tick count to zero
     Verilated::traceEverOn(true);
     tbTrace = NULL; //Null out the pointer
