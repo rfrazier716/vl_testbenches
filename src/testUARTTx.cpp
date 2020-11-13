@@ -18,6 +18,20 @@
 
 // Additional parameter definition, this is also set in the verilator .sh file
 #define TICKS_PER_CYCLE 3
+//State machine registers and paramters
+#define ST_TRANSMIT_B0 0x00
+#define ST_TRANSMIT_B1 0x01
+#define ST_TRANSMIT_B2 0x02
+#define ST_TRANSMIT_B3 0x03
+#define ST_TRANSMIT_B4 0x04
+#define ST_TRANSMIT_B5 0x05
+#define ST_TRANSMIT_B6 0x06
+#define ST_TRANSMIT_B7 0x07
+#define ST_DEADZONE  0x08
+#define ST_PARITY  0x09
+#define ST_STOP 0x0A
+#define ST_IDLE 0x0B
+#define ST_INIT 0x0C
 
 template<class T>
 void logSignal(T signal)
@@ -47,12 +61,6 @@ TEST_CASE("Single Byte Transmission","[uart-tx]"){
     tb->tick(); // Tick the clock once
     tb->dut->i_data = 0xA5; //put data on the bus
     writeUart(tb);
-    
-    // Tick a few times to put a gap
-    for(int j;j<5;j++){
-        tb->tick();
-    }
-
     tb->dut->i_data = 0x5A;
     writeUart(tb);
     //
@@ -100,7 +108,6 @@ TEST_CASE("Clock Frequency Accurate","[uart-tx]"){
     tb->dut->i_data = 0x55; //Put a signal on the data bus that toggles every other bit
     tb->dut->i_write = 1;
     tb->tick(); //latch the data
-    tb->tick(); // Tick again so the state machine updates
     pastOutput = tb->dut->o_tx_w;
 
     auto ticksPerBitAccurate = true;
@@ -125,22 +132,41 @@ TEST_CASE("Part initializes to idle","[uart-tx]"){
     */
 
     auto* tb = new SyncTB<MODTYPE>(50000000, false); // make a new module test bench
-    auto idleState = 0b1011;
-    REQUIRE(tb->dut->uart_tx__DOT__system_state_r == idleState);
+    REQUIRE(tb->dut->uart_tx__DOT__system_state_r == ST_IDLE);
     REQUIRE(tb->dut->o_tx_w == 1); //output should default to high
     REQUIRE(tb->dut->o_busy==0); //busy should initialize to low
+    auto stillIdle = true;
     for(int j = 0; j < 100; j++)
     {
         tb->tick();
+        stillIdle &= (tb->dut->uart_tx__DOT__system_state_r == ST_IDLE);
     }
-    REQUIRE(tb->dut->uart_tx__DOT__system_state_r == idleState);
+    REQUIRE(stillIdle);
 }
 
 TEST_CASE("Only Initialize write when idle","[uart-tx]"){
     /*
     Verifies that if a write request comes in when the part is already sampling it doesn't restart the state machine
     */
-    //TODO: Write this case
+
+    auto* tb = new SyncTB<MODTYPE>(50000000, false); // make a new module test bench
+    tb->dut->i_data = 0xFF; //write all high 
+    tb->dut->i_write = 0x01; //tell the device to write on the next clock
+    tb->tick(); // tick to latch data
+    
+    //cycle the clock until you're out of the init cycle
+    while(tb->dut->uart_tx__DOT__system_state_r == ST_INIT){
+        tb->tick();
+    }
+
+    //now complete the rest of the write cycle making sure not to 
+    auto transmitCycleUninterrupted = true;
+    while(tb->dut->o_busy == 1){
+        tb->dut->i_write = 0x01;
+        tb->tick();
+        transmitCycleUninterrupted &= (tb->dut->uart_tx__DOT__system_state_r != ST_INIT); // test fails if we ever re-enter init
+    }
+    REQUIRE(transmitCycleUninterrupted);
 
 }
 
