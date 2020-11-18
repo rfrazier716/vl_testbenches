@@ -17,7 +17,7 @@
 #include "inc/catch.hpp"
 
 
-TEST_CASE("Single Byte Transmission","[uart-tx]"){
+TEST_CASE("Single Byte Transmission","[fifo]"){
     /*
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */
@@ -34,6 +34,30 @@ TEST_CASE("Single Byte Transmission","[uart-tx]"){
         tb->dut->i_data_w = j;
         tb->tick();
     }
+}
+
+TEST_CASE("Reading and writing an empty FIFO","[fifo]"){
+    /*
+    When the system wants to simultaneously read and write from an empty FIFO, the value should be stored and
+    and both the read and write head advance
+    */
+
+    auto* tb = new SyncTB<MODTYPE>(50000000, false);
+    auto write_value = 0x7F;
+    tb->dut->i_data_w = write_value;
+    tb->dut->i_write_w = 1;
+    tb->dut->i_read_w = 1;
+    tb->tick();
+    REQUIRE(tb->dut->o_data_w == write_value);
+}
+
+TEST_CASE("Reading and writing a Full FIFO","[fifo]"){
+    /*
+    When the system wants to simultaneously read and write from an empty FIFO, the value should be directly placed on o_data
+    instead of stored
+    */
+    auto* tb = new SyncTB<MODTYPE>(50000000, false);
+    REQUIRE(true);
 }
 
 /* Cases to Test
