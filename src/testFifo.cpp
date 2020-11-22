@@ -16,6 +16,29 @@
 // Catch Library
 #include "inc/catch.hpp"
 
+//Define FIFO Parameter
+#define FIFO_DEPTH 3
+
+
+const int fifoMemory = (1<<FIFO_DEPTH)-1;
+
+
+void writeFIFO(SyncTB<MODTYPE>* tb, int writeData)
+{
+    tb->dut->i_data_w = writeData;
+    tb->dut->i_write_w = 1;
+    tb->tick();
+    tb->dut->i_write_w = 0;
+}
+
+int readFIFO(SyncTB<MODTYPE>* tb)
+{
+    auto readData = tb->dut->o_data_w;
+    tb->dut->i_read_w = 1;
+    tb->tick();
+    tb->dut->i_read_w = 0;
+}
+
 
 TEST_CASE("Single Byte Transmission","[fifo]"){
     /*
@@ -51,13 +74,40 @@ TEST_CASE("Reading and writing an empty FIFO","[fifo]"){
     REQUIRE(tb->dut->o_data_w == write_value);
 }
 
-TEST_CASE("Reading and writing a Full FIFO","[fifo]"){
+TEST_CASE("Tracking bytes stored in FIFO","[fifo]"){
     /*
     When the system wants to simultaneously read and write from an empty FIFO, the value should be directly placed on o_data
     instead of stored
     */
     auto* tb = new SyncTB<MODTYPE>(50000000, false);
-    REQUIRE(true);
+    tb->addVCDTrace("Filling_FIFO.vcd");
+
+    //fill the FIFO and make sure the bytes in the fifo track
+    auto bytesInFifoTracking = true;
+    for(int j=0; j<fifoMemory; j++)
+    {
+        writeFIFO(tb, j);
+        bytesInFifoTracking &= (tb->dut->o_fill_bytes_w == j+1);
+    }
+    REQUIRE(bytesInFifoTracking);
+
+    //now empty the fifo half way, making sure that it still tracks
+    bytesInFifoTracking = true;
+    for(int j=0; j<(fifoMemory>>1); j++)
+    {
+        readFIFO(tb); // read the FIFO
+        bytesInFifoTracking &= (tb->dut->o_fill_bytes_w == fifoMemory-(j+1));
+    }
+    REQUIRE(bytesInFifoTracking);
+
+    //and now refil the FIFO so there's a rollover and make sure the counter follows the rollover
+    bytesInFifoTracking = true;
+    for(int j=tb->dut->o_fill_bytes_w; j<fifoMemory; j++)
+    {
+        writeFIFO(tb,j); // read the FIFO
+        bytesInFifoTracking &= (tb->dut->o_fill_bytes_w == j+1);
+    }
+    REQUIRE(bytesInFifoTracking);
 }
 
 /* Cases to Test
