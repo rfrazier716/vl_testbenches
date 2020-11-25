@@ -17,26 +17,53 @@
 #include "inc/catch.hpp"
 
 // Additional parameter definition, this is also set in the verilator .sh file
-#define TICKS_PER_CYCLE 3
-//State machine registers and paramters
-#define ST_TRANSMIT_B0 0x00
-#define ST_TRANSMIT_B1 0x01
-#define ST_TRANSMIT_B2 0x02
-#define ST_TRANSMIT_B3 0x03
-#define ST_TRANSMIT_B4 0x04
-#define ST_TRANSMIT_B5 0x05
-#define ST_TRANSMIT_B6 0x06
-#define ST_TRANSMIT_B7 0x07
-#define ST_DEADZONE  0x08
-#define ST_PARITY  0x09
-#define ST_STOP 0x0A
-#define ST_IDLE 0x0B
-#define ST_INIT 0x0C
+#define TICKS_PER_CYCLE 8
 
 template<class T>
 void logSignal(T signal)
 {
     printf("0x%02x\n",signal);
+}
+
+void wbSlaveWriteRequest(SyncTB<MODTYPE>* tb, int addr, int value){
+    //Clock cycle 0: assert strobe, write enable, and put address and value on bus
+    tb->dut->wb_addr_in = addr;
+    tb->dut->wb_data_in = value;
+    tb->dut->wb_write_enable_in = 1;
+    tb->dut->wb_strobe_in = 1; 
+    // this tick is really clock edge 1 becaue those inputs were applied before the clock
+    tb->tick(); //tick the clock
+    
+    //Clock Edge 2
+    tb->dut->wb_strobe_in = 0;
+    tb->dut->wb_write_enable_in = 0;
+    tb->tick();
+}
+
+int wbSlaveReadRequest(SyncTB<MODTYPE>* tb, int addr){
+    //Clock cycle 0: assert strobe, write enable, and put address and value on bus
+    tb->dut->wb_addr_in = addr;
+    tb->dut->wb_write_enable_in = 0;
+    tb->dut->wb_strobe_in = 1; 
+    // this tick is really clock edge 1 becaue those inputs were applied before the clock
+    tb->tick(); //tick the clock
+    
+    //Clock Edge 2
+    tb->dut->wb_strobe_in = 0;
+    tb->tick();
+    return tb->dut->wb_data_out; // return the data out
+}
+
+void receiveByte(SyncTB<MODTYPE>* testbench, int dataByte){
+    auto dataPacket = (dataByte | 0x100)<<1;
+    for(int k=0;k<10;k++)
+    {
+        testbench->dut->i_rx_w=((dataPacket>>k) & 0x01); // update the bit on the data register
+        for(int j=0;j<TICKS_PER_CYCLE;j++)
+        {
+            testbench->tick();
+        }
+    }
 }
 
 //Cases to Test
@@ -47,18 +74,28 @@ TEST_CASE("Single Byte Transmission","[uart-tx]"){
     */
 
     auto* tb = new SyncTB<MODTYPE>(50000000, false); // make a new module test bench
+    tb->dut->i_rx_w = 1; // The reciever wire should be nominally high
+    tb->dut->eval();
     tb->addVCDTrace("WB_UART.vcd");
-    tb->dut->wb_uart__DOT__tx_fifo_write_w = 1;
-    for(int j=0;j<3;j++)
-    {
-        tb->tick();
-    }
-    tb->dut->wb_uart__DOT__tx_fifo_write_w = 0;
-    for(int j=0;j<=300;j++)
-    {
-        tb->tick();
-    }
-    //
+    
+    // put in a few write requests
+    wbSlaveWriteRequest(tb, 0x12, 0xA5);
+    wbSlaveWriteRequest(tb, 0x12, 0x5A);
+    wbSlaveWriteRequest(tb, 0x12, 0x7F);
+
+    // add data to the FIFO
+    receiveByte(tb,0x5A);
+    receiveByte(tb,0xA5);
+
+    auto bytesOnReceiver = wbSlaveReadRequest(tb,0x01);
+    REQUIRE(bytesOnReceiver == 2); // There should be two bytes on the receiver
+
+    // pull a byte off the fifo
+    auto fifoData = wbSlaveReadRequest(tb,0x11);
+    REQUIRE(fifoData == 0x5A);
+
+
+
 }
 
 //TODO: Write case to make sure states progress in order
