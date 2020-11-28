@@ -6,8 +6,10 @@
 
 #include "inc/tcp/TCPServer.hpp"
 #define PORT 8080
+#define SERVER_DEBUG
 
 enum class TxCaptureState {ST_IDLE,ST_DATA_BITS,ST_STOP_BIT};
+enum class RxCaptureState {ST_IDLE, ST_DATA_BITS, ST_STOP_BIT};
 
 template<class T>
 class UartTestBench{
@@ -26,6 +28,13 @@ class UartTestBench{
     int txBitShift = 0;
 
     void captureTxWire();
+
+    //Variables for pulling bytes from the TCPServer and manipulating them onto the Rx data wire
+    RxCaptureState rxState = RxCaptureState::ST_IDLE;
+    int rxCounter;
+    int rxBitShift = 0;
+
+    void assignRxWire();
 
     //If we're configuring tx/rx data on the tcp, create a new server object
     TCPServer* server = nullptr; //TCP server to capture IO
@@ -48,7 +57,7 @@ public:
 template<class T>
 void UartTestBench<T>::tick(){
     tickCount++; //Increase how many ticks have occured
-    //update RX line based on server port
+    if(server) assignRxWire(); // if the server is attached pull bytes and mask them onto the Rx Wire
     dut->CLOCK_LINE = 0;
     dut->eval(); 
     if(tbTrace) tbTrace->dump(tickCount*10-2); //Dump the signal change before a trace    
@@ -64,6 +73,46 @@ void UartTestBench<T>::tick(){
     if(tbTrace){
         tbTrace->dump(tickCount*10+5); //Dump the negative edge of the clock
         tbTrace->flush();
+    }
+}
+
+//sets the rx wire according to messages received from the server
+template<class T>
+void UartTestBench<T>::assignRxWire()
+{
+    switch(rxState){
+        case RxCaptureState::ST_IDLE:
+            rxCounter = baudCounter; //reset the rxCounter
+            rxBitShift = 0; //the current bit-shift is zero
+
+            dut->i_rx_w = 1; // if there is not data incoming, kake sure the rx wire is pulled high
+            server->tick(); // tick the server to capture incoming data
+            // if we are able to pull data off the rx buffer go into the data state
+            if(server->getBytes((char *)&lastRxByte, 1))
+            {
+                #ifdef SERVER_DEBUG
+                printf("Received: %c from server on tick %d,\r\n", lastRxByte, tickCount);
+                #endif
+                rxState = RxCaptureState::ST_DATA_BITS; //move into the transmit state
+            }
+            break;
+        
+        case RxCaptureState::ST_DATA_BITS:
+            rxCounter--; //Decrease the baudCounter
+            auto dataPacket = (lastRxByte | 0x100) << 1; //add the appropriate start and stop bits
+            dut->i_rx_w = (dataPacket >> rxBitShift) & 0x01; //put the relevant part of data on the Rx Line
+            // if the baudCounter zero'd out advance the rxBitShift and reset the counter
+            if(rxCounter == 0)
+            {
+                #ifdef SERVER_DEBUG
+                printf("rx wire to %d on tick %d\r\n", dut->i_rx_w, tickCount);
+                #endif
+                rxCounter = baudCounter; // Reset the Rx Counter
+                rxBitShift++; //increment the bit shift
+            }
+            // if 10 bytes have been received go back into the idle state
+            rxState = (rxBitShift == 10) ? RxCaptureState::ST_IDLE : RxCaptureState::ST_DATA_BITS; 
+            break;
     }
 }
 
@@ -94,7 +143,9 @@ void UartTestBench<T>::captureTxWire()
                 //assert(false); // assert the stop bit is high
                 lastTxByte = txByteInProgress; // transfer the last completed byte
                 if(server) server->sendMessage((char *)&lastTxByte, 1); //transmit the byte to the client if the server is connected
+                #ifdef SERVER_DEBUG
                 printf("Transmitted: %c on tick %d,\r\n",txByteInProgress, tickCount);
+                #endif
                 txByteInProgress = '\0'; //clear the byte in progress 
                 txState = TxCaptureState::ST_IDLE; //advance to the idle state
             }

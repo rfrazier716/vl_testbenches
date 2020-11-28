@@ -89,7 +89,10 @@ TEST_CASE("Single Byte Transmission","[uart-tx]"){
     }
     while(!tb->dut->wb_uart__DOT__tx_fifo_empty) tb->tick(); //Tick until the fifo is empty
     while(tb->dut->wb_uart__DOT__uart_tx_busy_w) tb->tick(); //Tick until the last byte finishes transmitting
-
+    while(true)
+    {
+        tb->tick();
+    }
 }
 
 //TODO: Write case to make sure states progress in order
