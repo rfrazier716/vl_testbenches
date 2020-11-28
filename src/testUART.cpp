@@ -12,6 +12,7 @@
 // Test Bench Class Definition and Implementation
 #define CLOCK_LINE i_clk //Define what clock line the testbench will toggle
 #include "inc/SynchronousTB.hpp"
+#include "inc/UartTestBench.hpp"
 
 // Catch Library
 #include "inc/catch.hpp"
@@ -25,7 +26,7 @@ void logSignal(T signal)
     printf("0x%02x\n",signal);
 }
 
-void wbSlaveWriteRequest(SyncTB<MODTYPE>* tb, int addr, int value){
+void wbSlaveWriteRequest(UartTestBench<MODTYPE>* tb, int addr, int value){
     //Clock cycle 0: assert strobe, write enable, and put address and value on bus
     tb->dut->wb_addr_in = addr;
     tb->dut->wb_data_in = value;
@@ -40,7 +41,7 @@ void wbSlaveWriteRequest(SyncTB<MODTYPE>* tb, int addr, int value){
     tb->tick();
 }
 
-int wbSlaveReadRequest(SyncTB<MODTYPE>* tb, int addr){
+int wbSlaveReadRequest(UartTestBench<MODTYPE>* tb, int addr){
     //Clock cycle 0: assert strobe, write enable, and put address and value on bus
     tb->dut->wb_addr_in = addr;
     tb->dut->wb_write_enable_in = 0;
@@ -54,7 +55,7 @@ int wbSlaveReadRequest(SyncTB<MODTYPE>* tb, int addr){
     return tb->dut->wb_data_out; // return the data out
 }
 
-void receiveByte(SyncTB<MODTYPE>* testbench, int dataByte){
+void receiveByte(UartTestBench<MODTYPE>* testbench, int dataByte){
     auto dataPacket = (dataByte | 0x100)<<1;
     for(int k=0;k<10;k++)
     {
@@ -73,28 +74,21 @@ TEST_CASE("Single Byte Transmission","[uart-tx]"){
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */
 
-    auto* tb = new SyncTB<MODTYPE>(50000000, false); // make a new module test bench
+    auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
     tb->dut->i_rx_w = 1; // The reciever wire should be nominally high
     tb->dut->eval();
     tb->addVCDTrace("WB_UART.vcd");
-    
+    tb->tick();
+    tb->tick();
+    tb->attachServer();
     // put in a few write requests
-    wbSlaveWriteRequest(tb, 0x12, 0xA5);
-    wbSlaveWriteRequest(tb, 0x12, 0x5A);
-    wbSlaveWriteRequest(tb, 0x12, 0x7F);
-
-    // add data to the FIFO
-    receiveByte(tb,0x5A);
-    receiveByte(tb,0xA5);
-
-    auto bytesOnReceiver = wbSlaveReadRequest(tb,0x01);
-    REQUIRE(bytesOnReceiver == 2); // There should be two bytes on the receiver
-
-    // pull a byte off the fifo
-    auto fifoData = wbSlaveReadRequest(tb,0x11);
-    REQUIRE(fifoData == 0x5A);
-
-
+    std::string message = "Hello World\r\n";
+    for (char const &c: message)
+    {
+        wbSlaveWriteRequest(tb,0x12, c);
+    }
+    while(!tb->dut->wb_uart__DOT__tx_fifo_empty) tb->tick(); //Tick until the fifo is empty
+    while(tb->dut->wb_uart__DOT__uart_tx_busy_w) tb->tick(); //Tick until the last byte finishes transmitting
 
 }
 
