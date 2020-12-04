@@ -69,7 +69,7 @@ void receiveByte(UartTestBench<MODTYPE>* testbench, int dataByte){
 
 //Cases to Test
 //Program counter reset
-TEST_CASE("Single Byte Transmission","[uart-tx]"){
+TEST_CASE("Single Byte Transmission","[uart-top][uart]"){
     /*
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */

@@ -51,7 +51,7 @@ void writeUart(SyncTB<MODTYPE>* testBench){
 
 //Cases to Test
 //Program counter reset
-TEST_CASE("Single Byte Transmission","[uart-tx]"){
+TEST_CASE("Single Byte Transmission","[uart-tx][uart]"){
     /*
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */
@@ -66,7 +66,7 @@ TEST_CASE("Single Byte Transmission","[uart-tx]"){
     //
 }
 
-TEST_CASE("Busy Flag Functional","[uart-tx]"){
+TEST_CASE("Busy Flag Functional","[uart-tx][uart]"){
     /*
     Tests that the busy flag is initially idle, goes high when the state machine is active,
     and goes low once the state machine idles again
@@ -95,7 +95,7 @@ TEST_CASE("Busy Flag Functional","[uart-tx]"){
     REQUIRE_FALSE(tb->dut->o_busy);
 }
 
-TEST_CASE("Clock Frequency Accurate","[uart-tx]"){
+TEST_CASE("Clock Frequency Accurate","[uart-tx][uart]"){
     /*
     Verifies that the state machine transitions after the counter overflows
     */
@@ -126,7 +126,7 @@ TEST_CASE("Clock Frequency Accurate","[uart-tx]"){
     REQUIRE(ticksPerBitAccurate);
 }
 
-TEST_CASE("Part initializes to idle","[uart-tx]"){
+TEST_CASE("Part initializes to idle","[uart-tx][uart]"){
     /*
     Makes sure that the default state is idle and it doesn't accidently transmit data
     */
@@ -144,7 +144,7 @@ TEST_CASE("Part initializes to idle","[uart-tx]"){
     REQUIRE(stillIdle);
 }
 
-TEST_CASE("Only Initialize write when idle","[uart-tx]"){
+TEST_CASE("Only Initialize write when idle","[uart-tx][uart]"){
     /*
     Verifies that if a write request comes in when the part is already sampling it doesn't restart the state machine
     */

@@ -40,7 +40,7 @@ void receiveByte(SyncTB<MODTYPE>* testbench, int dataByte){
     }
 }
 
-TEST_CASE("Single Byte Transmission","[uart-rx]"){
+TEST_CASE("Single Byte Transmission","[uart-rx][uart]"){
     /*
     Makes a GTKWave plot of a uart Receive frame and verifies the correct value was latched
     */
@@ -55,7 +55,7 @@ TEST_CASE("Single Byte Transmission","[uart-rx]"){
     REQUIRE(tb->dut->o_data_w==transmissionByte);
 }
 
-TEST_CASE("Data Ready Wire Assertion","[uart-rx]"){
+TEST_CASE("Data Ready Wire Assertion","[uart-rx][uart]"){
     /*
     The data ready wire should go high for one clock cycle after 9.5*CYCLES_PER_BIT clock cycles
     */
@@ -75,7 +75,7 @@ TEST_CASE("Data Ready Wire Assertion","[uart-rx]"){
     REQUIRE(tb->dut->o_data_ready_w == 1);
 }
 
-TEST_CASE("busy wire stays high through entire dataframe","[uart-rx]"){
+TEST_CASE("busy wire stays high through entire dataframe","[uart-rx][uart]"){
     /*
     The busy wire should be combinatorial output and assert itself whenever the state is not idle 
     */
@@ -97,7 +97,7 @@ TEST_CASE("busy wire stays high through entire dataframe","[uart-rx]"){
     REQUIRE(busyFlagValid);
 }
 
-TEST_CASE("There's no counter issues for multiple sequential bytes","[uart-rx]"){
+TEST_CASE("There's no counter issues for multiple sequential bytes","[uart-rx][uart]"){
     /*
     If recieving multiple bytes in a row the counter should not lag and eventually cause incorrect state transitions
     */
@@ -110,7 +110,7 @@ TEST_CASE("There's no counter issues for multiple sequential bytes","[uart-rx]")
     REQUIRE(dataTransferWorking);
 }
 
-TEST_CASE("Initial States are set properly","[uart-rx]"){
+TEST_CASE("Initial States are set properly","[uart-rx][uart]"){
     /*
     All values should be initialized properly
     */

@@ -17,7 +17,7 @@
 #include "inc/catch.hpp"
 
 
-TEST_CASE("Linefeed Detection","[fifo]"){
+TEST_CASE("Linefeed Detection","[linefeed][uart]"){
     /*
     Make sure that a rising edge signal is output for one clock cycle after the rising edge 
     */

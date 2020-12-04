@@ -17,7 +17,7 @@
 #include "inc/catch.hpp"
 
 
-TEST_CASE("Rising & Falling Edge Detection","[fifo]"){
+TEST_CASE("Rising & Falling Edge Detection","[edge-detect][uart]"){
     /*
     Make sure that a rising edge signal is output for one clock cycle after the rising edge 
     */

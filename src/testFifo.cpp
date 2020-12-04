@@ -44,7 +44,7 @@ int readFIFO(SyncTB<MODTYPE>* tb)
 }
 
 
-TEST_CASE("Single Byte Transmission","[fifo]"){
+TEST_CASE("Single Byte Transmission","[fifo][uart]"){
     /*
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */
@@ -64,7 +64,7 @@ TEST_CASE("Single Byte Transmission","[fifo]"){
 }
 
 
-TEST_CASE("Tracking bytes stored in FIFO","[fifo]"){
+TEST_CASE("Tracking bytes stored in FIFO","[fifo][uart]"){
     /*
     When the system wants to simultaneously read and write from an empty FIFO, the value should be directly placed on o_data
     instead of stored
@@ -100,7 +100,7 @@ TEST_CASE("Tracking bytes stored in FIFO","[fifo]"){
     REQUIRE(bytesInFifoTracking);
 }
 
-TEST_CASE("Filling and Writing A FULL FIFO","[fifo]"){
+TEST_CASE("Filling and Writing A FULL FIFO","[fifo][uart]"){
     /*
     When writing to a full fifo it should act like a shift register, one bit is put in and one is pulled out 
     Need to remember, when you read data from the fifo and advance the read head, it is the signal BEFORE the tick that ends up on your read head
@@ -145,7 +145,7 @@ TEST_CASE("Filling and Writing A FULL FIFO","[fifo]"){
     REQUIRE(tb->dut->fifo__DOT__read_head_r == 0x01);
 }
 
-TEST_CASE("Reading an Empty FIFO","[fifo]"){
+TEST_CASE("Reading an Empty FIFO","[fifo][uart]"){
     /*
     When trying to read from an empty fifo the read head does not advance and the data on the bus is garbage,
     */
@@ -162,7 +162,7 @@ TEST_CASE("Reading an Empty FIFO","[fifo]"){
     REQUIRE(tb->dut->fifo__DOT__read_head_r==0x00);
 }
 
-TEST_CASE("FIFO fill output on Rollover","[fifo]"){
+TEST_CASE("FIFO fill output on Rollover","[fifo][uart]"){
     /* 
     Fifo Fill Factor should stay accurate even when rolling over the buffer boundary
     */
