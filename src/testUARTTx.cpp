@@ -14,7 +14,7 @@
 #include "inc/SynchronousTB.hpp"
 
 // Catch Library
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 // Additional parameter definition, this is also set in the verilator .sh file
 #define TICKS_PER_CYCLE 3
@@ -51,7 +51,7 @@ void writeUart(SyncTB<MODTYPE>* testBench){
 
 //Cases to Test
 //Program counter reset
-TEST_CASE("Single Byte Transmission","[uart-tx][uart]"){
+TEST_CASE("UartTX Single Byte Transmission","[uart-tx][uart]"){
     /*
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */

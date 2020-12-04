@@ -14,7 +14,7 @@
 #include "inc/SynchronousTB.hpp"
 
 // Catch Library
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 
 TEST_CASE("Linefeed Detection","[linefeed][uart]"){

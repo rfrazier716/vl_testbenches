@@ -2,7 +2,7 @@
 #include "verilated.h"
 // Catch Library
 #define CATCH_CONFIG_RUNNER
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 int main( int argc, char* argv[] ) {
   // global setup...

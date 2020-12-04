@@ -14,7 +14,7 @@
 #include "inc/SynchronousTB.hpp"
 
 // Catch Library
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 
 TEST_CASE("Rising & Falling Edge Detection","[edge-detect][uart]"){

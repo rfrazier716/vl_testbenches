@@ -15,7 +15,7 @@
 #include "inc/UartTestBench.hpp"
 
 // Catch Library
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 // Additional parameter definition, this is also set in the verilator .sh file
 #define TICKS_PER_CYCLE 8

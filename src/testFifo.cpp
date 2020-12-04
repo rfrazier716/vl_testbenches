@@ -17,7 +17,7 @@
 #include "inc/SynchronousTB.hpp"
 
 // Catch Library
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 //Define FIFO Parameter
 #define FIFO_DEPTH 3
@@ -44,7 +44,7 @@ int readFIFO(SyncTB<MODTYPE>* tb)
 }
 
 
-TEST_CASE("Single Byte Transmission","[fifo][uart]"){
+TEST_CASE("Writing a Single FIFO Byte","[fifo][uart]"){
     /*
     This is really just here to make a gtkwave plot in the build directory that can be referenced for debug
     */

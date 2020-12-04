@@ -14,7 +14,7 @@
 #include "inc/SynchronousTB.hpp"
 
 // Catch Library
-#include "inc/catch.hpp"
+#include <catch2/catch.hpp>
 
 // Additional parameter definition, this is also set in the verilator .sh file
 #define TICKS_PER_CYCLE 8
@@ -40,7 +40,7 @@ void receiveByte(SyncTB<MODTYPE>* testbench, int dataByte){
     }
 }
 
-TEST_CASE("Single Byte Transmission","[uart-rx][uart]"){
+TEST_CASE("UartRX single byte Receive","[uart-rx][uart]"){
     /*
     Makes a GTKWave plot of a uart Receive frame and verifies the correct value was latched
     */
