@@ -1,5 +1,6 @@
 // Verilated Library
 #include "verilated.h"
+
 // Catch Library
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
