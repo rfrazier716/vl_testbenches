@@ -80,19 +80,6 @@ TEST_CASE("Single Byte Transmission","[uart-top][uart]"){
     tb->addVCDTrace("WB_UART.vcd");
     tb->tick();
     tb->tick();
-    tb->attachServer();
-    // put in a few write requests
-    std::string message = "Hello World\r\n";
-    for (char const &c: message)
-    {
-        wbSlaveWriteRequest(tb,0x12, c);
-    }
-    while(!tb->dut->wb_uart__DOT__tx_fifo_empty) tb->tick(); //Tick until the fifo is empty
-    while(tb->dut->wb_uart__DOT__uart_tx_busy_w) tb->tick(); //Tick until the last byte finishes transmitting
-    while(true)
-    {
-        tb->tick();
-    }
 }
 
 //TODO: Write case to make sure states progress in order
