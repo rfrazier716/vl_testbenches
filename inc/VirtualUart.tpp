@@ -5,19 +5,23 @@
 
 //Class constructor
 //assign default initialization
-VirtualUart::VirtualUart(int baudTicks, int& uartRxWire, int& uartTxWire):
+template <class T>
+VirtualUart<T>::VirtualUart(int baudTicks, T& uartRxWire, T& uartTxWire):
 baudTicks(baudTicks), rxWire(uartRxWire), txWire(uartTxWire), rxBuffer(BUFFER_DEPTH), txBuffer(BUFFER_DEPTH){
     //initialize the state machines to idle
     txState = rxState = UARTState::ST_IDLE;
 }
 
 //Tick function advances the uart by one baudtick
-void VirtualUart::tick(){
+template <class T>
+
+void VirtualUart<T>::tick(){
     captureTxWire(); //capture data output on the TX wire
     driveRxWire(); //drive input to the RX wire
 }
 
-void VirtualUart::driveRxWire(){
+template <class T>
+void VirtualUart<T>::driveRxWire(){
     switch(rxState){
         case UARTState::ST_IDLE:
             rxCounter = baudTicks; //reset the rxCounter
@@ -49,7 +53,8 @@ void VirtualUart::driveRxWire(){
     }
 }
 
-void VirtualUart::captureTxWire()
+template <class T>
+void VirtualUart<T>::captureTxWire()
 {
     switch(txState){
         case UARTState::ST_IDLE:
@@ -67,13 +72,26 @@ void VirtualUart::captureTxWire()
                 txByteInProgress |= (txWire << txBitShift); //latch the date being output by the transmitter
                 txBitShift++; // increment the bit shift
                 //if we've latched 8 bits go to the stop bit
-                txState = (txBitShift == 8) ? UARTState::ST_STOP_BIT : UARTState::ST_DATA_BITS;
+                if(txBitShift == 8)
+                {
+                    txCounter = baudTicks/2; //the stop bit baud counter is halved
+                    txState = UARTState::ST_STOP_BIT; //move to the stop bit counter
+                }
             }
             break;
         case UARTState::ST_STOP_BIT:
-            lastTxByte = txByteInProgress; // transfer the last completed byte
-            txByteInProgress = '\0'; //clear the byte in progress 
-            txState = UARTState::ST_IDLE; //advance to the idle state
+            txCounter--; //decrement teh counter
+            if(txCounter == 0){
+                lastTxByte = txByteInProgress; // transfer the last completed byte
+                txByteInProgress = '\0'; //clear the byte in progress 
+                txState = UARTState::ST_IDLE; //advance to the idle state
+            }
             break;
     }
+}
+
+//add a character to the rx buffer
+template <class T>
+void VirtualUart<T>::writeRxBuffer(char rxInput){
+    rxBuffer.push_back(rxInput);
 }

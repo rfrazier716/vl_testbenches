@@ -17,7 +17,7 @@
 #include <catch2/catch.hpp>
 
 // Additional parameter definition, this is also set in the verilator .sh file
-#define TICKS_PER_CYCLE 3
+#define TICKS_PER_CYCLE 8
 //State machine registers and paramters
 #define ST_TRANSMIT_B0 0x00
 #define ST_TRANSMIT_B1 0x01

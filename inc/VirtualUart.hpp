@@ -5,10 +5,11 @@
 //An enum to control the uart state machines
 enum class UARTState {ST_IDLE,ST_DATA_BITS,ST_STOP_BIT};
 
+template <class T>
 class VirtualUart{
     const int baudTicks; //How many ticks per baud clock
-    int& rxWire; // the receive wire -- the server drive this wire based on input
-    int& txWire; // the tx wire -- server samples this wire to generate output
+    T& rxWire; // the receive wire -- the server drive this wire based on input
+    T& txWire; // the tx wire -- server samples this wire to generate output
     char lastTxByte; // the last byte that was transmitted by the server
     char lastRxByte; // the last byt that was received by the server
     boost::circular_buffer<char> rxBuffer; //buffer to put input to assert to the rx wire
@@ -27,13 +28,15 @@ class VirtualUart{
     void captureTxWire(); //function to pull data off the tx wire
     void driveRxWire(); //function to drive the rxWire
 public:
-    VirtualUart(int baudTicks, int& uartRxWire, int& uartTxWire);
+    VirtualUart(int baudTicks, T& uartRxWire, T& uartTxWire);
     void tick(); // the tick function advances the clock
     char getLastTxByte(){return lastTxByte;}
     char getLastRxByte(){return lastRxByte;}
     UARTState getTxState(){return txState;}
     UARTState getRxState(){return rxState;}
-    int getTxValue(){return txWire;}
-    int getRxValue(){return rxWire;}
-
+    int getTxValue(){return txWire;} //current value of the tx wire
+    int getRxValue(){return rxWire;} //current value of the rx wire
+    void writeRxBuffer(char rxInput); //add a character to the rx buffer
 };
+
+#include "VirtualUart.tpp" //Include the Template Implementation
