@@ -116,7 +116,7 @@ TEST_CASE("Clock Frequency Accurate","[uart-tx][uart]"){
         currentOutput = tb->dut->o_tx_w; //update the current output value
         if(currentOutput != pastOutput)
         {
-            ticksPerBitAccurate &= (tickCounter == 3);
+            ticksPerBitAccurate &= (tickCounter == TICKS_PER_CYCLE);
             tickCounter = 0; // Reset the counter
             pastOutput = currentOutput;
         }

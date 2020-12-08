@@ -2,6 +2,8 @@
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 
+#include <memory>
+
 //If the clock line wasn't already defined in the parent file define it here
 #ifndef CLOCK_LINE
     #define CLOCK_LINE sys_clock
@@ -19,7 +21,7 @@ class SyncTB
 
 public:
     T* dut; // The device being tested
-    void tick(); //Execute a clock cycle
+    virtual void tick(); //Execute a clock cycle
     void reset(); //resets the part, assumes there is an input called reset
     void addVCDTrace(const char*);
 

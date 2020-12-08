@@ -21,7 +21,6 @@ TEST_CASE("Linefeed Detection","[linefeed][uart]"){
     /*
     Make sure that a rising edge signal is output for one clock cycle after the rising edge 
     */
-
     auto* tb = new SyncTB<MODTYPE>(50000000, false); // make a new module test bench
     tb->addVCDTrace("Linefeed.vcd");
 
@@ -63,7 +62,6 @@ TEST_CASE("Linefeed Detection","[linefeed][uart]"){
     REQUIRE_FALSE(tb->dut->o_linefeed_rising); //flag should only stay on for one tick
 
     //if we reverse the order it should not work;
-    delete tb;
     const std::string fakeEOL = "\n\r";
     tb->dut->i_data_latch = 0x01; // make sure data latch is high
     for(const char &c:fakeEOL){

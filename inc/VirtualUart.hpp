@@ -25,11 +25,13 @@ class VirtualUart{
     int rxCounter; // counter for state transition
     int rxBitShift; //Receiver bit shift
 
-    void captureTxWire(); //function to pull data off the tx wire
-    void driveRxWire(); //function to drive the rxWire
 public:
     VirtualUart(int baudTicks, T& uartRxWire, T& uartTxWire);
     void tick(); // the tick function advances the clock
+    void captureTxWire(); //function to pull data off the tx wire
+    void driveRxWire(); //function to drive the rxWire
+
+    
     char getLastTxByte(){return lastTxByte;}
     char getLastRxByte(){return lastRxByte;}
     UARTState getTxState(){return txState;}
