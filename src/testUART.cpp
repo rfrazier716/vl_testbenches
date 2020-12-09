@@ -21,6 +21,7 @@
 
 // Additional parameter definition, this is also set in the verilator .sh file
 #define TICKS_PER_CYCLE 8
+#define FIFO_DEPTH 8
 
 template<class T>
 void logSignal(T signal)
@@ -60,6 +61,12 @@ int wbSlaveReadRequest(UartTestBench<MODTYPE>* tb, int addr){
     
 }
 
+void receiveVUartChar(UartTestBench<MODTYPE>* tb, char rxByte){
+    tb->vUart->writeRxBuffer(rxByte); //write to the rx buffer
+    tb->tick(); //tick once to get out of the idle state
+    for(int i: boost::irange(TICKS_PER_CYCLE*10)) tb->tick(); //tick through the receive clocks
+}
+
 //Cases to Test
 //Program counter reset
 TEST_CASE("Single Byte Transmission","[uart-top][uart]"){
@@ -79,6 +86,33 @@ TEST_CASE("Single Byte Transmission","[uart-top][uart]"){
     
     //make sure that the UART was latched properly to the virtualUart
     REQUIRE(tb->vUart->getLastTxByte() == 0x7F);
+}
+
+TEST_CASE("Long Message Transmission","[uart-top][uart]"){
+    /*
+    make sure that we can transmit a long message without issues with the buffer or losing a byte
+    */
+
+    auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
+    tb->addVCDTrace("WB_UART_multi_tx.vcd");
+    auto messageLength = 0x80;
+    for(int i: boost::irange(messageLength)){
+        wbSlaveWriteRequest(tb,0x12,i); // write into the tx Buffer
+    }
+    // there are 2 ticks per write request, and a data packet takes 10*TICKS_PER_CYCLE+1 to transmit
+    // the first write request wasn't in parallel with a transmit so it does not count
+    for(int i=0;i<(messageLength*(10*TICKS_PER_CYCLE +1)-(messageLength-1)*2);i++){
+        tb->tick();
+    }    
+    //require that we're done transmmitting
+    REQUIRE(!tb->dut->led_tx_busy);
+    
+    //not iterate over the data on the tx buffer and make sure it's in the correct order
+    auto bytesTransmittedSuccessfully = true;
+    for(int i: boost::irange(messageLength)){
+        bytesTransmittedSuccessfully &= (tb->vUart->txBuffer[i]==i);
+    }
+    REQUIRE(bytesTransmittedSuccessfully);
 }
 
 TEST_CASE("Receiving a Byte","[uart-top][uart]"){
@@ -108,19 +142,95 @@ TEST_CASE("Receiving multiple bytes","[uart-top][uart]"){
     tb->tick();
 
     //put a series of bytes on the buffer
-    for(int i: boost::irange(0x04)){
+    auto bytesToReceive = 0x10;
+    for(int i: boost::irange(bytesToReceive)){
         tb->vUart->writeRxBuffer(i);
-        tb->tick();
-        tb->tick();
-        while(tb->dut->led_rx_busy) tb->tick();
-        }
+        tb->tick(); //tick once to get out of the idle state
+        for(int i: boost::irange(TICKS_PER_CYCLE*10)) tb->tick(); //tick through the 10 bits transmitted in a frame
+    }
+    REQUIRE(!tb->dut->led_rx_busy); //at the end of the transmission the RX state should not be busy
 
-    //initiate a wishbone read of register 0x11 which should be the most recent fifo bit
+    //initiate a wishbone read of register 0x01 which should be be the count of bytes on the fifo
     auto rxByte = wbSlaveReadRequest(tb, 0x0001);
     tb->tick();
-    REQUIRE(rxByte == 0x10);
+    REQUIRE(rxByte == bytesToReceive);
+
+    //Now read back all those bytes
+    for(int i: boost::irange(bytesToReceive)){
+        tb->vUart->writeRxBuffer(i);
+        tb->tick(); //tick once to get out of the idle state
+        for(int i: boost::irange(TICKS_PER_CYCLE*10)) tb->tick(); //tick through the 10 bits transmitted in a frame
+    }
+
 }
 
+TEST_CASE("linefeed interrupt functional","[uart-top][uart]"){
+    auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
+    tb->addVCDTrace("WB_UART_newline.vcd");
+    tb->tick();
 
-//TODO: Write case to make sure states progress in order
-//TODO: write case to make sure the proper data is output
+    std::string rxMessage = "Hello world, this is quite the long message is it not?\r\n";
+    for(auto &c: rxMessage){
+       receiveVUartChar(tb, c);
+    }
+    REQUIRE(tb->dut->rx_linefeed_available); //the linefeed availabe flag should be set
+    REQUIRE(tb->dut->rx_fifo_byte_available); // the byte available flag should be set
+
+    //now if we write another bit that flag should be deasserted
+    receiveVUartChar(tb, 'x');
+    REQUIRE(!tb->dut->rx_linefeed_available); //the lf flag shoudl deassert
+    REQUIRE(tb->dut->rx_fifo_byte_available); // the byte available flag should still be set
+}
+
+TEST_CASE("FIFO Full Interrupt functional","[uart-top][uart]"){
+    auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
+    tb->addVCDTrace("WB_UART_newline.vcd");
+    tb->tick();
+
+    auto fifo_bytes = (0x01 << FIFO_DEPTH)-1;
+    for(auto i: boost::irange(fifo_bytes)){
+        receiveVUartChar(tb,i);
+    }
+    //check the appropriate flags are set
+    REQUIRE(!tb->dut->rx_linefeed_available); //no linefeed should be found
+    REQUIRE(tb->dut->rx_fifo_full); //fifo should be full
+    REQUIRE(tb->dut->rx_fifo_byte_available); //bytes are available
+    
+}
+
+TEST_CASE("Bytes on Rx Fifo Count","[uart-top][uart]"){
+    auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
+
+    //fill the Rx fifo
+    auto fifoFillWorking = true;
+    auto bytesToReceive = (0x01 << FIFO_DEPTH)-1;
+    for(int i: boost::irange(bytesToReceive)){
+        receiveVUartChar(tb,i);
+        fifoFillWorking &= (wbSlaveReadRequest(tb,0x01) == (i+1));
+    }
+    REQUIRE(fifoFillWorking);
+
+}
+
+TEST_CASE("Bytes on Tx Fifo Count","[uart-top][uart]"){
+    auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
+    //it takes 3 clock cycles to write a byte
+    //8 clock cycles to transmit a single character
+    //so including start and stop bit we have 80 clock cycles before the next byte gets popped
+    //I can write 20 bytes to the fifo in that time easily, and the fifo depth should be n-1 where 
+    // n is bytes written
+
+    //fill the Tx fifo
+    auto fifoFillWorking = true;
+    auto bytesToWrite = 20; //write 20 bytes out
+    int bytesOnTxFifo;
+    wbSlaveWriteRequest(tb, 0x12, 0x00); //write data to keep the tx busy while writing more
+    tb->tick(); //tick so the data is pulled from the fifo
+    for(int i: boost::irange(bytesToWrite)){
+        wbSlaveWriteRequest(tb,0x12,i);
+        bytesOnTxFifo = wbSlaveReadRequest(tb,0x02);
+        fifoFillWorking &= (bytesOnTxFifo == (i+1));
+    }
+    REQUIRE(fifoFillWorking);
+
+}

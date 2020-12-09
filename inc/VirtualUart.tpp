@@ -83,6 +83,8 @@ void VirtualUart<T>::captureTxWire()
             txCounter--; //decrement teh counter
             if(txCounter == 0){
                 lastTxByte = txByteInProgress; // transfer the last completed byte
+                //push data onto the txBuffer
+                txBuffer.push_back(lastTxByte);
                 txByteInProgress = '\0'; //clear the byte in progress 
                 txState = UARTState::ST_IDLE; //advance to the idle state
             }

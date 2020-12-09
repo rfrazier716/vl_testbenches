@@ -12,8 +12,6 @@ class VirtualUart{
     T& txWire; // the tx wire -- server samples this wire to generate output
     char lastTxByte; // the last byte that was transmitted by the server
     char lastRxByte; // the last byt that was received by the server
-    boost::circular_buffer<char> rxBuffer; //buffer to put input to assert to the rx wire
-    boost::circular_buffer<char> txBuffer; //buffer to put data that's being transmitted out
     
     //variables for the tx and rx state machines
     UARTState txState; // the current state of the txCapture state machine
@@ -26,6 +24,9 @@ class VirtualUart{
     int rxBitShift; //Receiver bit shift
 
 public:
+    boost::circular_buffer<char> rxBuffer; //buffer to put input to assert to the rx wire
+    boost::circular_buffer<char> txBuffer; //buffer to put data that's being transmitted out
+
     VirtualUart(int baudTicks, T& uartRxWire, T& uartTxWire);
     void tick(); // the tick function advances the clock
     void captureTxWire(); //function to pull data off the tx wire

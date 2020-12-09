@@ -44,7 +44,8 @@ TEST_CASE("Transmitting a Byte through the vUART","[uart-tb][uart]"){
 
     //transmit a series of bytesand make sure they end up on the last transmitted byte
     auto bytesTransmittedProperly = true;
-    for(int i: boost::irange(0x02)){
+    auto txBufferFilling = true;
+    for(int i: boost::irange(0x10)){
         tb->dut->i_data = i; //put the data on the bus
         tb->dut->i_write = 1; //set the write request high
         tb->tick();
@@ -54,8 +55,10 @@ TEST_CASE("Transmitting a Byte through the vUART","[uart-tb][uart]"){
             tb->tick(); //tick the testbench
         }
         bytesTransmittedProperly &= vUart->getLastTxByte() == i;
+        txBufferFilling &= vUart->txBuffer[i] == i;
     }
     REQUIRE(bytesTransmittedProperly);
+    REQUIRE(txBufferFilling);
 }
 
 TEST_CASE("Receiving Bytes through the vUART","[uart-tb][uart]"){
