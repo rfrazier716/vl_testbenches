@@ -6,8 +6,8 @@
 #include <iostream>
 
 // Necessary Includes for Verilated
-#include "uart_tx/Vuart_tx.h"
-#include "verilated.h"
+#include "Vuart_tx.h"
+#include <verilated.h>
 
 // Test Bench Class Definition and Implementation
 #define CLOCK_LINE i_clk //Define what clock line the testbench will toggle

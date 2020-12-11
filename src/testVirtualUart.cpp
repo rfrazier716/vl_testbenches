@@ -4,9 +4,9 @@
 #include <boost/range/irange.hpp>
 
 //verilated Tx and Rx blocks used to verify virtual uart
-#include "uart_rx/Vuart_rx.h"
-#include "uart_tx/Vuart_tx.h"
-#include "verilated.h"
+#include "Vuart_rx.h"
+#include "Vuart_tx.h"
+#include <verilated.h>
 
 #define TICKS_PER_CYCLE 8
 

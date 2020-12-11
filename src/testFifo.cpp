@@ -9,8 +9,8 @@
 #include <boost/range/irange.hpp> //integer range
 
 // Necessary Includes for Verilated
-#include "fifo/Vfifo.h"
-#include "verilated.h"
+#include "Vfifo.h"
+#include <verilated.h>
 
 // Test Bench Class Definition and Implementation
 #define CLOCK_LINE i_clk //Define what clock line the testbench will toggle
