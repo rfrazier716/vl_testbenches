@@ -116,10 +116,11 @@ TEST_CASE("Long Message Transmission","[uart-top][uart]"){
 }
 
 TEST_CASE("Receiving a Byte","[uart-top][uart]"){
+    auto byteToWrite = 0x7F;
     auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
     tb->addVCDTrace("WB_UART_rx.vcd");
     tb->tick();
-    tb->vUart->writeRxBuffer(0x01); // put a byte onto the rxBuffer
+    tb->vUart->writeRxBuffer(byteToWrite); // put a byte onto the rxBuffer
     // in two ticks the vUart should have popped the byte off the buffer and asserted a low
     // on the RX wire
     tb->tick();
@@ -131,9 +132,9 @@ TEST_CASE("Receiving a Byte","[uart-top][uart]"){
     while(!tb->dut->rx_fifo_byte_available) tb->tick();
 
     //initiate a wishbone read of register 0x11 which should be the most recent fifo bit
-    auto rxByte = wbSlaveReadRequest(tb, 0x0001);
+    auto rxByte = wbSlaveReadRequest(tb, 0x11);
     tb->tick();
-    REQUIRE(rxByte == 0x01);
+    REQUIRE(rxByte == byteToWrite);
 }
 
 TEST_CASE("Receiving multiple bytes","[uart-top][uart]"){
@@ -162,6 +163,8 @@ TEST_CASE("Receiving multiple bytes","[uart-top][uart]"){
         for(int i: boost::irange(TICKS_PER_CYCLE*10)) tb->tick(); //tick through the 10 bits transmitted in a frame
     }
 
+    //TODO: Finish this Test Case
+
 }
 
 TEST_CASE("linefeed interrupt functional","[uart-top][uart]"){
@@ -175,6 +178,8 @@ TEST_CASE("linefeed interrupt functional","[uart-top][uart]"){
     }
     REQUIRE(tb->dut->rx_linefeed_available); //the linefeed availabe flag should be set
     REQUIRE(tb->dut->rx_fifo_byte_available); // the byte available flag should be set
+
+    //Reading a byte from the UART will clear the flag but bytes are still available
 
     //now if we write another bit that flag should be deasserted
     receiveVUartChar(tb, 'x');
