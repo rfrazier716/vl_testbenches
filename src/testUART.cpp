@@ -158,13 +158,9 @@ TEST_CASE("Receiving multiple bytes","[uart-top][uart]"){
 
     //Now read back all those bytes
     for(int i: boost::irange(bytesToReceive)){
-        tb->vUart->writeRxBuffer(i);
-        tb->tick(); //tick once to get out of the idle state
-        for(int i: boost::irange(TICKS_PER_CYCLE*10)) tb->tick(); //tick through the 10 bits transmitted in a frame
+        rxByte = wbSlaveReadRequest(tb, 0x11);
+        REQUIRE(rxByte == i);
     }
-
-    //TODO: Finish this Test Case
-
 }
 
 TEST_CASE("linefeed interrupt functional","[uart-top][uart]"){
@@ -180,16 +176,19 @@ TEST_CASE("linefeed interrupt functional","[uart-top][uart]"){
     REQUIRE(tb->dut->rx_fifo_byte_available); // the byte available flag should be set
 
     //Reading a byte from the UART will clear the flag but bytes are still available
+    wbSlaveReadRequest(tb, 0x11); 
+    REQUIRE(!tb->dut->rx_linefeed_available); //the linefeed availabe flag should be set
+    REQUIRE(tb->dut->rx_fifo_byte_available); // the byte available flag should be set
 
-    //now if we write another bit that flag should be deasserted
+    //put another byte on and make sure that it's cleared when you latch new data
+    receiveVUartChar(tb,'\r');
+    REQUIRE(tb->dut->rx_linefeed_available); //the lf flag should deassert
     receiveVUartChar(tb, 'x');
-    REQUIRE(!tb->dut->rx_linefeed_available); //the lf flag shoudl deassert
     REQUIRE(tb->dut->rx_fifo_byte_available); // the byte available flag should still be set
 }
 
 TEST_CASE("FIFO Full Interrupt functional","[uart-top][uart]"){
     auto* tb = new UartTestBench<MODTYPE>(TICKS_PER_CYCLE); // make a new module test bench
-    tb->addVCDTrace("WB_UART_newline.vcd");
     tb->tick();
 
     auto fifo_bytes = (0x01 << FIFO_DEPTH)-1;
