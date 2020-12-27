@@ -169,7 +169,7 @@ TEST_CASE("linefeed interrupt functional","[uart-top][uart]"){
     tb->addVCDTrace("WB_UART_newline.vcd");
     tb->tick();
 
-    std::string rxMessage = "Hello world, this is quite the long message is it not?\r\n";
+    std::string rxMessage = "Hello world, this is quite the long message is it not?\r";
     for(auto &c: rxMessage){
        receiveVUartChar(tb, c);
     }
