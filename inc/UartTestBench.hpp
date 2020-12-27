@@ -16,7 +16,7 @@ public:
     std::unique_ptr<VirtualUart<CData>> vUart; //the virtualUART port
     UartTestBench(int baudCounter=108); // Class constructor
     ~UartTestBench(); // Class Destructor
-    void tick(); // overrride the synchronous testbench tick function
+    virtual void tick(); // overrride the synchronous testbench tick function
     };
 
 #include "inc/UartTestBench.tpp" //Include the template implemenation file
