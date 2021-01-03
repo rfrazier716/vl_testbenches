@@ -1,34 +1,30 @@
-#pragma once // Only execute initialization once
+/*
+ * An Asynchronous TCP server to use with virtual device drivers
+ */
 
+#pragma once
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
-//Necessary includes to get socket working
-#include <sys/socket.h> 
-#include <arpa/inet.h> 
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
+#include <iostream>
+#include <memory>
+#include <string>
 
-// the circular buffer library for TX and RX buffers
-#include <boost/circular_buffer.hpp>
-#define BUFFER_DEPTH 1024
+#include "TCPConnection.hpp"
+
+using boost::asio::ip::tcp;
+
 
 class TCPServer{
-    const int port; // The port for the client to listen on
-    int sockfd; // Socket File descriptor (like a file handle)
-    int clientSocket; //The socket fd for the first client connection
-    char rawRxBuffer[BUFFER_DEPTH]; 
-    boost::circular_buffer<char> txBuffer; // Buffer for transmit
-    boost::circular_buffer<char> rxBuffer; // Buffer for receive
-    int createSocket();
-    
+    boost::asio::io_context context_; //a unique IO_Context that the server owns
+    tcp::acceptor acceptor_; // the TCP Server Acceptor
+    TCPConnection::pointer connection_; //the TCP Connection -- only supporting one connection for this server
+
+    void start_accept(); //Creates socket and initializes an asynchronous accept
+    void handle_accept(const boost::system::error_code&);
+
+
 public:
-    TCPServer(int port); // Class initialization
-    ~TCPServer(); //Destructor
-    int connectToClient(); // A blocking connection to a client
-    void tick(); // tick the server, pull bytes and transmit the buffer
-    int getBytes(char * message, int maxLength);
-    void sendMessage(const char* message, int messageLen); 
-    void sendMessage(const char* message);
-    void sendChar(char transmitByte); //Send a byte to the client
-    void setBlocking(bool blocking);
+    void run(); // runs the server
+    TCPServer(const std::string ip= "127.0.0.1", int port = 8080); //Class Constructor
 };
