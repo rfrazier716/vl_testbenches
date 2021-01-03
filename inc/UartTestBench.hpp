@@ -5,7 +5,7 @@
 #include "verilated_vcd_c.h"
 
 //Include the virtualUART class which will be used as the interface
-#include "inc/SynchronousTB.hpp" //this testbench inherits from the UartTestBench
+#include "inc/SynchronousTestBench.hpp" //this testbench inherits from the UartTestBench
 #include "inc/VirtualUart.hpp"
 
 #include <memory> //used for smart pointers

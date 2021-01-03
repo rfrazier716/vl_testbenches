@@ -11,7 +11,7 @@
 #define TICKS_PER_CYCLE 8
 
 #define CLOCK_LINE i_clk //Define what clock line the testbench will toggle
-#include "inc/SynchronousTB.hpp"
+#include "inc/SynchronousTestBench.hpp"
 
 // Catch Library
 #include <catch2/catch.hpp>
