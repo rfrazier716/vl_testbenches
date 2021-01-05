@@ -17,9 +17,8 @@ void TCPConnection::check_write() {
     if(!tx_queue_.empty()){
         //set up an ASIO message transmit
         boost::asio::async_write(socket_, boost::asio::buffer(tx_queue_.front()),
-                                 boost::bind(&TCPConnection::handle_write, shared_from_this(),
-                                             boost::asio::placeholders::error,
-                                             boost::asio::placeholders::bytes_transferred));
+                                 [self = shared_from_this()](boost::system::error_code error, size_t size){
+            self->handle_write(error,size);});
         tx_queue_.pop(); // pop the front off the queue
     }
     // if the TX queue is empty, re-register the even with the io_context executor
