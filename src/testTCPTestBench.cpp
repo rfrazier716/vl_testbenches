@@ -20,12 +20,14 @@
 
 // Catch Library
 #include <catch2/catch.hpp>
+#include <boost/range/irange.hpp>
 
 
 TEST_CASE("Connecting to a TCP TestBench","[test-bench]"){
     auto server = std::make_unique<TCPServer>(); //make a server on port 8080
-    server->write_to_connection("Here's another Message\r\n");
     server->start(); // start the server
-    server->write_to_connection("Whoop Whoop here's one more");
+    for (auto i: boost::irange(10000)){
+        server->write_to_connection(std::to_string(i)+"\r\n");
+    }
     server->stop();
 }

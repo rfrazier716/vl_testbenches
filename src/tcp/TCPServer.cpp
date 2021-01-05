@@ -33,14 +33,13 @@ void TCPServer::write_to_connection(std::string write_message) {
 
 void TCPServer::start() {
     //make a new thread to run the run method
-    std::cout << "Server Starting" <<std::endl;
-    continue_server_ = true;
-    context_run_thread_ = std::thread(&TCPServer::run, this);
+    continue_server_.store(true);
+    context_run_thread_ = std::thread([&] { context_.run(); });
 }
 
 void TCPServer::stop() {
-    //continue_server_ = false;
-    context_run_thread_.join();
+    connection_->close_connection(); // close the connection
+    context_run_thread_.join(); //wait for the thread to finish
 }
 
 TCPServer::~TCPServer(){

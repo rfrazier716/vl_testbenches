@@ -26,13 +26,17 @@ public:
     void start(); // Function that is called when the connection is successful
     void write(std::string write_message); // register an asio write
     void read(); //register an asio read
+    void close_connection() { continue_connection_.store(false);}
 
 private:
+
+    std::atomic<bool> continue_connection_;
     //Queues for handling message Rx and Tx
     std::queue<std::string> tx_queue_;
     std::queue<std::string> rx_queue_;
 
-    virtual void handle_write(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/){}
+    void check_write(); // check if there's a byte to write and if so set's up an asio_write
+    virtual void handle_write(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/);
     virtual void handle_read(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/){}
 
     // The constructor is private to make sure it's always created as a shared_ptr -- for ASIO

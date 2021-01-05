@@ -5,17 +5,37 @@
 
 void TCPConnection::write(std::string write_message){
     //push message to front of tx_queue
-    boost::asio::async_write(socket_, boost::asio::buffer(write_message),
-                             boost::bind(&TCPConnection::handle_write, shared_from_this(),
-                                         boost::asio::placeholders::error,
-                                         boost::asio::placeholders::bytes_transferred));
+    tx_queue_.push(write_message);
 }
 
 void TCPConnection::start(){
-    write("Hello TCP World\r\n");
+    check_write(); // call once explicitly to add it as a handler
+}
+
+void TCPConnection::check_write() {
+    // if the TX Queue isn't empty, pop a byte off of it and add async_write work
+    if(!tx_queue_.empty()){
+        //set up an ASIO message transmit
+        boost::asio::async_write(socket_, boost::asio::buffer(tx_queue_.front()),
+                                 boost::bind(&TCPConnection::handle_write, shared_from_this(),
+                                             boost::asio::placeholders::error,
+                                             boost::asio::placeholders::bytes_transferred));
+        tx_queue_.pop(); // pop the front off the queue
+    }
+    // if the TX queue is empty, re-register the even with the io_context executor
+    else{
+        if(continue_connection_) {
+            boost::asio::post(socket_.get_executor(),
+                              boost::bind(&TCPConnection::check_write, shared_from_this()));
+        }
+    }
 }
 
 void TCPConnection::read(){
     //TODO: write Read Function
 }
 
+void TCPConnection::handle_write(const boost::system::error_code &error, size_t size) {
+    //the write handler should re-register the check_write handle
+    check_write(); //go back to check write to see if there's more data to transmit
+}
