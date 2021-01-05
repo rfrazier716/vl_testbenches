@@ -24,5 +24,8 @@
 
 TEST_CASE("Connecting to a TCP TestBench","[test-bench]"){
     auto server = std::make_unique<TCPServer>(); //make a server on port 8080
-    server->run();
+    server->write_to_connection("Here's another Message\r\n");
+    server->start(); // start the server
+    server->write_to_connection("Whoop Whoop here's one more");
+    server->stop();
 }

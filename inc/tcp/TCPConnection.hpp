@@ -29,8 +29,8 @@ public:
 
 private:
     //Queues for handling message Rx and Tx
-    std::queue<std::string> tx_queue();
-    std::queue<std::string> rx_queue();
+    std::queue<std::string> tx_queue_;
+    std::queue<std::string> rx_queue_;
 
     virtual void handle_write(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/){}
     virtual void handle_read(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/){}

@@ -4,6 +4,7 @@
 #include "inc/tcp/TCPConnection.hpp"
 
 void TCPConnection::write(std::string write_message){
+    //push message to front of tx_queue
     boost::asio::async_write(socket_, boost::asio::buffer(write_message),
                              boost::bind(&TCPConnection::handle_write, shared_from_this(),
                                          boost::asio::placeholders::error,
