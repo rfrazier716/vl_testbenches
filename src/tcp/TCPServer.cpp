@@ -1,7 +1,9 @@
 #include "inc/tcp/TCPServer.hpp"
 
 TCPServer::TCPServer(const std::string ip, int port):
-    acceptor_(context_, tcp::endpoint(boost::asio::ip::make_address(ip), port)){
+    acceptor_(context_, tcp::endpoint(boost::asio::ip::make_address(ip), port)),
+    guard_(context_.get_executor())
+    {
     start_accept(); // Make acceptor Object and connect
 }
 
@@ -38,7 +40,7 @@ void TCPServer::start() {
 }
 
 void TCPServer::stop() {
-    connection_->close_connection(); // close the connection
+    guard_.reset(); //close the work guard so the server exits as normal
     context_run_thread_.join(); //wait for the thread to finish
 }
 
