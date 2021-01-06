@@ -29,7 +29,7 @@ void TCPServer::run(){
     }
 }
 
-void TCPServer::write_to_connection(std::string write_message) {
+void TCPServer::write_to_connection(std::string &write_message) {
     connection_->write(write_message);
 }
 
@@ -37,6 +37,8 @@ void TCPServer::start() {
     //make a new thread to run the run method
     continue_server_.store(true);
     context_run_thread_ = std::thread([&] { context_.run(); });
+    while(!connection_->connected); // loop until a connection is made
+    connection_->write(connection_->test_message);
 }
 
 void TCPServer::stop() {

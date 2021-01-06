@@ -37,7 +37,7 @@ public:
     virtual ~TCPServer();
     void start(); // runs the server
     void stop();
-    void write_to_connection(std::string write_message);
+    void write_to_connection(std::string &write_message);
 
     TCPServer(const std::string ip= "127.0.0.1", int port = 8080); //Class Constructor
 };

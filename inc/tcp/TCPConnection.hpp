@@ -17,6 +17,8 @@ using boost::asio::ip::tcp;
 
 class TCPConnection: public std::enable_shared_from_this<TCPConnection>{
 public:
+    std::string test_message = "This is a test\r\n";
+    bool connected = false;
     virtual ~TCPConnection(){}
     typedef std::shared_ptr<TCPConnection> pointer;
     static pointer create(boost::asio::io_context& io_context){return pointer(new TCPConnection(io_context));}
@@ -24,7 +26,7 @@ public:
     tcp::socket socket_; // socket of the connection
 
     void start(); // Function that is called when the connection is successful
-    void write(std::string write_message); // register an asio write
+    void write(std::string& write_message); // register an asio write
     void read(); //register an asio read
     void close_connection() { continue_connection_.store(false);}
 

@@ -3,13 +3,18 @@
 //
 #include "inc/tcp/TCPConnection.hpp"
 
-void TCPConnection::write(std::string write_message){
-    //push message to front of tx_queue
-    tx_queue_.push(write_message);
+void TCPConnection::write(std::string &write_message){
+    //register an ASIO write
+    boost::asio::async_write(socket_, boost::asio::buffer(write_message),
+                             [self = shared_from_this()](boost::system::error_code error, size_t size){
+                                 self->handle_write(error,size);});
 }
 
 void TCPConnection::start(){
-    check_write(); // call once explicitly to add it as a handler
+    connected = true;
+    write(test_message);
+
+    //check_write(); // call once explicitly to add it as a handler
 }
 
 void TCPConnection::check_write() {
@@ -36,5 +41,5 @@ void TCPConnection::read(){
 
 void TCPConnection::handle_write(const boost::system::error_code &error, size_t size) {
     //the write handler should re-register the check_write handle
-    check_write(); //go back to check write to see if there's more data to transmit
+    //check_write(); //go back to check write to see if there's more data to transmit
 }
