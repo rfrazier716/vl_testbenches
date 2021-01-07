@@ -47,18 +47,16 @@ void udp_server::handle_receive(const boost::system::error_code &error, std::siz
     }
 }
 
-void udp_server::handle_send(std::unique_ptr<std::string> &message, const boost::system::error_code &error,
+void udp_server::handle_send(std::shared_ptr<std::string> message, const boost::system::error_code &error,
                              std::size_t size) {
     // Pretty sure this is just here to ensure that the lifetime of message is long enough to transmit
 }
 
 void udp_server::send(std::string message) {
 
-    auto msg_ptr = std::make_unique<std::string>("Hello World");
-    *msg_ptr = message; //
-    //*msg_ptr = message;
+    auto msg_ptr = std::make_shared<std::string>(message);
     socket_.async_send_to(boost::asio::buffer(*msg_ptr),
                           remote_endpoint_,
-                          [&](boost::system::error_code error,
-                              size_t size){ handle_send(msg_ptr, error, size);});
+                          [=](boost::system::error_code error,
+                              size_t size){handle_send(msg_ptr, error, size);});
 }

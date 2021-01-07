@@ -32,7 +32,7 @@ private:
     void start_receive();
     void handle_receive(const boost::system::error_code& error,
                         std::size_t /*bytes_transferred*/);
-    void handle_send(std::unique_ptr<std::string> &message, const boost::system::error_code &error, std::size_t size);
+    void handle_send(std::shared_ptr<std::string> message, const boost::system::error_code &error, std::size_t size);
 
     boost::asio::io_context context_; //the asio context for the server
     udp::socket socket_; //Socket for the connection
