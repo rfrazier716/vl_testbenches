@@ -1,0 +1,6 @@
+# ignore any top level build directories
+*build*/
+
+# IDE Settings Folders
+.idea/
+.vscode/
