@@ -6,6 +6,8 @@
 // Catch Library
 #include <catch2/catch.hpp>
 
+#include "testbenches/SynchronousTestBench.hpp"
+
 
 TEST_CASE("Hello Test",""){
     REQUIRE(true);
