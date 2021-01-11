@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../UartTestBench.hpp"
+#include "../testbenches/UartTestBench.hpp"
 #include <boost/asio.hpp>
 #include <iostream>
 #include <vector>

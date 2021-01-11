@@ -1,27 +1,23 @@
 //A virtual TCP Server that accepts client connections and generates
 //appropriate uart signals 
 
-#include "inc/VirtualUart.hpp"
+#include "interfaces/VirtualUart.hpp"
 
 //Class constructor
 //assign default initialization
-template <class T>
-VirtualUart<T>::VirtualUart(int baudTicks, T& uartRxWire, T& uartTxWire):
+VirtualUart::VirtualUart(int baudTicks, int& uartRxWire, int& uartTxWire):
 baudTicks(baudTicks), rxWire(uartRxWire), txWire(uartTxWire), rxBuffer(BUFFER_DEPTH), txBuffer(BUFFER_DEPTH){
     //initialize the state machines to idle
     txState = rxState = UARTState::ST_IDLE;
 }
 
 //Tick function advances the uart by one baudtick
-template <class T>
-
-void VirtualUart<T>::tick(){
+void VirtualUart::tick(){
     captureTxWire(); //capture data output on the TX wire
     driveRxWire(); //drive input to the RX wire
 }
 
-template <class T>
-void VirtualUart<T>::driveRxWire(){
+void VirtualUart::driveRxWire(){
     switch(rxState){
         case UARTState::ST_IDLE:
             rxCounter = baudTicks; //reset the rxCounter
@@ -53,8 +49,7 @@ void VirtualUart<T>::driveRxWire(){
     }
 }
 
-template <class T>
-void VirtualUart<T>::captureTxWire()
+void VirtualUart::captureTxWire()
 {
     switch(txState){
         case UARTState::ST_IDLE:
@@ -93,7 +88,6 @@ void VirtualUart<T>::captureTxWire()
 }
 
 //add a character to the rx buffer
-template <class T>
-void VirtualUart<T>::writeRxBuffer(char rxInput){
+void VirtualUart::writeRxBuffer(char rxInput){
     rxBuffer.push_back(rxInput);
 }

@@ -5,11 +5,10 @@
 //An enum to control the uart state machines
 enum class UARTState {ST_IDLE,ST_DATA_BITS,ST_STOP_BIT};
 
-template <class T>
 class VirtualUart{
     const int baudTicks; //How many ticks per baud clock
-    T& rxWire; // the receive wire -- the server drive this wire based on input
-    T& txWire; // the tx wire -- server samples this wire to generate output
+    int& rxWire; // the receive wire -- the server drive this wire based on input
+    int& txWire; // the tx wire -- server samples this wire to generate output
     char lastTxByte; // the last byte that was transmitted by the server
     char lastRxByte; // the last byt that was received by the server
     
@@ -27,7 +26,7 @@ public:
     boost::circular_buffer<char> rxBuffer; //buffer to put input to assert to the rx wire
     boost::circular_buffer<char> txBuffer; //buffer to put data that's being transmitted out
 
-    VirtualUart(int baudTicks, T& uartRxWire, T& uartTxWire);
+    VirtualUart(int baudTicks, int& uartRxWire, int& uartTxWire);
     void tick(); // the tick function advances the clock
     void captureTxWire(); //function to pull data off the tx wire
     void driveRxWire(); //function to drive the rxWire
@@ -42,4 +41,3 @@ public:
     void writeRxBuffer(char rxInput); //add a character to the rx buffer
 };
 
-#include "VirtualUart.tpp" //Include the Template Implementation
