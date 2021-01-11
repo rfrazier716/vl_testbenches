@@ -16,13 +16,19 @@ find_package(Boost REQUIRED COMPONENTS system)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-# Find the Verilator Package and add necessary Definitions
+# Path Definitions used in submodules
+set(VL_TEST_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src")
+set(VL_TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/inc")
+set(VL_TEST_BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
+set(VL_TEST_LIB_DIR "${CMAKE_SOURCE_DIR}/lib")
 
-# Add the Verilator Include path to the include search directory
-include_directories(
-        "${CMAKE_SOURCE_DIR}/inc")            # include directory for testbench
 
-IF(${ENABLE_TESTS})
-    enable_testing()
-    INCLUDE("cmake/tests.cmake")
-ENDIF()
+
+# Add the Include path to the include search directory
+include_directories("${VL_TEST_INCLUDE_DIR}")            # include directory for testbench
+
+# add the library as a target
+add_subdirectory("${VL_TEST_SOURCE_DIR}")
+
+# Add unittests as a target
+add_subdirectory("${CMAKE_SOURCE_DIR}/test")
