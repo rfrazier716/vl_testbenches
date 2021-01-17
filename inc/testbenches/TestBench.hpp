@@ -21,7 +21,8 @@ namespace tb {
     class TestBench{
     public:
         void tick();
-        void get_timestamp();
+        double get_timestamp(){return timestamp_;}
+
     private:
         // timing related constants
         int tick_count_; //manages how many clock cycles have occured
@@ -35,11 +36,13 @@ namespace tb {
         //make the constructor private so the templating flows properly (only child who is friend can call parent)
         TestBench();
         friend CHILD;
+    protected:
     };
 
     template<class CHILD, typename DUT>
     TestBench<CHILD, DUT>::TestBench(): clock_frequency_(100), clock_phase_t_(500 / clock_frequency_) {
         dut_ = std::make_unique<DUT>(); // construct the DUT
+        dut_->eval(); // evaluate the DUT once so initial input/output are set
         tick_count_ = 0; //set the tick count to zero
         timestamp_ = 0; //set teh current timestamp to zero
     }

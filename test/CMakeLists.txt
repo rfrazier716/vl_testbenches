@@ -1,9 +1,6 @@
 cmake_minimum_required (VERSION 3.10)
 project ("tests")
 
-# Set the build directory to be ./build
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
-
 # Find the Boost Library Installation
 find_package(Boost REQUIRED COMPONENTS system)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -14,6 +11,10 @@ find_package(Catch2 REQUIRED)
 include(CTest)
 include(Catch)
 
+# Load the Verilator Package so that we can verilate a simple RTL and confirm our testbench
+find_package(verilator HINTS $ENV{VERILATOR_ROOT})
+
+
 # compile catchMain as a library for quicker compilation times
 add_library(catch_main "${CMAKE_CURRENT_LIST_DIR}/catchMain.cpp")
 
@@ -22,9 +23,12 @@ add_executable(tests
         "${CMAKE_CURRENT_LIST_DIR}/test_synchronous_testbench.cpp"
         )
 
+# verilate and link the d-flipflop library to the test
+verilate(tests SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v")
+
 target_link_libraries(tests PUBLIC
-        vl_test
         catch_main)
+
 
 # Register Ctests
 set(TEST_TAGS "[testbench]")
