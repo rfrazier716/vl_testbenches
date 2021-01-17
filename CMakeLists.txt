@@ -23,9 +23,12 @@ set(VL_TEST_BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 set(VL_TEST_LIB_DIR "${CMAKE_SOURCE_DIR}/lib")
 
 
-
 # Add the Include path to the include search directory
-include_directories("${VL_TEST_INCLUDE_DIR}")            # include directory for testbench
+set(VL_INC_DIR "/usr/share/verilator/include")
+include_directories(
+        ${VL_TEST_INCLUDE_DIR}  # include directory for testbench
+        ${VL_INC_DIR}       # include directory for verilator headers
+)
 
 # add the library as a target
 add_subdirectory("${VL_TEST_SOURCE_DIR}")
