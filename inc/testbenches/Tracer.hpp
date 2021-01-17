@@ -19,22 +19,18 @@ public:
     ~Tracer(); //Class Destructor
     void add_vcd_trace(const char* trace_name="Trace"); //initialize a vcd trace
 
-protected:
     // Functions to write data to the trace
     void dump_state(const double timestamp); //write the current state of the DUT to the file
     void flush_buffer(); //flush the vcd buffer to a file
 
-    // Timing related constraints
-    int tick_count_; //how many clock cycle have occured
-    double clock_phase_t_; // how long a clock phase is in ns
+protected:
 
 private:
-    void initialize_trace(); //set-up the vcd trace
-
     // Internal variables
     std::unique_ptr<VerilatedVcdC> trace_; //Pointer to trace stream
     T& dut_; //Reference to the DUT, lifetime must be insured?
 
+    void initialize_trace(); //set-up the vcd trace
 };
 
 template <class T>
@@ -56,7 +52,7 @@ void Tracer<T>::add_vcd_trace(const char* trace_name) {
     // if the trace is a null pointer initialize it
     if(!trace_){
         trace_ = std::make_unique<VerilatedVcdC>();
-        dut_->trace(trace_, 00); //bind the DUT to dump its data to the trace
+        dut_.trace(trace_.get(), 00); //bind the DUT to dump its data to the trace
         trace_->open(trace_name); //Open the trace
     }
 }

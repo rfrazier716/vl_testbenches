@@ -35,7 +35,7 @@ TEST_CASE("Tick Functional","[testbench]"){
     tb->tick();
     REQUIRE(tb->get_q_out()==1);
     REQUIRE(tb->get_nq_out()==0);
-    REQUIRE(tb->get_timestamp() == 15);
+    REQUIRE(tb->get_timestamp() == 10);
 
     // Verify that the timestamp is updating to be the negative clock phase on every tick
     bool timestamp_updating = true;
@@ -45,4 +45,18 @@ TEST_CASE("Tick Functional","[testbench]"){
         tb->tick();
         timestamp_updating &= (tb->get_timestamp()-previous_timestamp) == expected_time_gap;
     }
+    REQUIRE(timestamp_updating);
+}
+
+TEST_CASE("writing output to a VCD Trace","[testbench]"){
+    /*
+     * Test is not automated but created a vcd trace to examine
+     */
+    auto tb = std::make_unique<FFTestBench>();
+    tb->add_trace("Test_Trace.vcd");
+    for(int j=0;j<10;j++) {
+        tb->set_data_in(!tb->get_q_out());
+        tb->tick();
+    }
+    REQUIRE(true);
 }

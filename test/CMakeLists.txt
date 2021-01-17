@@ -24,7 +24,7 @@ add_executable(tests
         )
 
 # verilate and link the d-flipflop library to the test
-verilate(tests SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v")
+verilate(tests SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v" TRACE )
 
 target_link_libraries(tests PUBLIC
         catch_main)
