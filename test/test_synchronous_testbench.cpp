@@ -13,10 +13,34 @@
 
 class FFTestBench: public tb::TestBench<FFTestBench,Vd_flip_flop>{
 public:
+    double pre_rising_timestamp_;
+    double post_rising_timestamp_;
+    double post_falling_timestamp_;
+
     void set_clock(uint8_t clock_value){this->dut_->i_clk = clock_value;}
     void set_data_in(uint8_t value){ this->dut_->i_data_in = value;}
+
+    void reset(){
+        this->dut_->i_rst = 1;
+        this->tick();
+        this->dut_->i_rst = 0;
+    }
+
     CData get_q_out(){ return this->dut_->o_q_out;}
     CData get_nq_out(){ return this->dut_->o_nq_out;}
+
+    FFTestBench(){
+        pre_rising_timestamp_=0;
+        post_rising_timestamp_=0;
+        post_falling_timestamp_=0;
+    }
+
+protected:
+    void pre_rising_edge(){pre_rising_timestamp_= this->timestamp_;}
+    void post_rising_edge(){post_rising_timestamp_ = this->timestamp_;}
+    void post_falling_edge(){post_falling_timestamp_= this->timestamp_;}
+
+    friend class tb::Accessor; // must be used to override protected functions
 };
 
 
@@ -30,22 +54,50 @@ TEST_CASE("Tick Functional","[testbench]"){
     /*
      * The Tick function should latch the data and update the output, as well as update the timestamp
      */
+    auto clock_period = 10;
     auto tb = std::make_unique<FFTestBench>();
     tb->set_data_in(1);
     tb->tick();
     REQUIRE(tb->get_q_out()==1);
     REQUIRE(tb->get_nq_out()==0);
-    REQUIRE(tb->get_timestamp() == 10);
+    REQUIRE(tb->get_timestamp() == clock_period * 3 / 2); // after a tick the last timestamp was the falling edge
 
     // Verify that the timestamp is updating to be the negative clock phase on every tick
     bool timestamp_updating = true;
-    int expected_time_gap = 10;
     for(int j=0;j<10;j++) {
         auto previous_timestamp = tb->get_timestamp();
         tb->tick();
-        timestamp_updating &= (tb->get_timestamp()-previous_timestamp) == expected_time_gap;
+        timestamp_updating &= (tb->get_timestamp()-previous_timestamp) == clock_period;
     }
     REQUIRE(timestamp_updating);
+}
+
+TEST_CASE("Child TestBench can access dut","[testbench]"){
+    /*
+     * the reset function is defined by a child of TestBench, being able to write to it means the protected dut_
+     * is accessible from the child
+     */
+    auto tb = std::make_unique<FFTestBench>();
+    tb->set_data_in(1);
+    tb->tick();
+    REQUIRE(tb->get_q_out()==1);
+    tb->reset();
+    REQUIRE(tb->get_q_out()==0);
+}
+
+TEST_CASE("Calling Pre and post tick functions","[testbench]"){
+    /*
+     *  Verifies functionality of the accessor class and that child classes can override the pre
+     *  and post tick functions.
+     */
+    auto tb = std::make_unique<FFTestBench>();
+    //with default testbench frequency frequency we expect the timestamps to be at 8,10, and 15 ns
+    tb->tick();
+
+    auto expected_ts_at_start = 8.0;
+    REQUIRE(tb->pre_rising_timestamp_ == Approx(expected_ts_at_start));
+    REQUIRE(tb->post_rising_timestamp_ == Approx(expected_ts_at_start+2));
+    REQUIRE(tb->post_falling_timestamp_ == Approx(expected_ts_at_start+7));
 }
 
 TEST_CASE("writing output to a VCD Trace","[testbench]"){
@@ -60,3 +112,6 @@ TEST_CASE("writing output to a VCD Trace","[testbench]"){
     }
     REQUIRE(true);
 }
+
+
+
