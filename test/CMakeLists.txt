@@ -16,20 +16,27 @@ find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 
 
 # compile catchMain as a library for quicker compilation times
-add_library(catch_main "${CMAKE_CURRENT_LIST_DIR}/catchMain.cpp")
+add_executable(tests "${CMAKE_CURRENT_LIST_DIR}/catchMain.cpp")
 
 # Create the test target
-add_executable(tests
+add_library(test_testbenches OBJECT
         "${CMAKE_CURRENT_LIST_DIR}/test_synchronous_testbench.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/interfaces/test_IOInterface.cpp"
         )
 
 # verilate and link the d-flipflop library to the test
-verilate(tests SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v" TRACE )
+verilate(test_testbenches SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v" TRACE )
+
+add_library(test_interfaces OBJECT
+        "${CMAKE_CURRENT_LIST_DIR}/interfaces/test_IOInterface.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/interfaces/uart/test_UartTransmitter.cpp"
+        )
+
+target_link_libraries(test_interfaces interfaces)
 
 target_link_libraries(tests PUBLIC
-        interfaces
-        catch_main)
+        test_testbenches
+        test_interfaces
+        )
 
 
 # Register Ctests

@@ -44,4 +44,11 @@ void tb::interface::UartTransmitter::post_tick() {
             }
             break;
     }
+
+}
+
+char tb::interface::UartTransmitter::pop_byte() {
+    char tx_byte = '\0';
+    dequeue(tx_byte);
+    return tx_byte;
 }

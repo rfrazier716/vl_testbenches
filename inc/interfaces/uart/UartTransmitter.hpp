@@ -19,6 +19,10 @@ namespace tb{
 
         public:
             explicit UartTransmitter(int& tx_wire, int baud_clock);
+            int get_baud_rate(){return baud_clock_;}
+            char pop_byte();
+            bool byte_available(){return !queue_empty();}
+
             enum class State {ST_IDLE,ST_DATA_BITS,ST_STOP_BIT}; //states of the transmitter
             void post_tick();
 
