@@ -9,16 +9,18 @@
 #include "interfaces/VirtualInterface.hpp"
 #include "interfaces/uart/UartTransmitter.hpp"
 
+// Wrap class definitions in anonymous namespace so they're not accessible to other translation units
+namespace {
+    class TestInterface : public tb::interface::IOInterface<int> {
+        void pre_tick() override {
 
-class TestInterface: public tb::interface::IOInterface<int>{
-    void pre_tick() override {
+        }
 
-    }
+        void post_tick() override {
 
-    void post_tick() override {
-
-    }
-};
+        }
+    };
+}
 
 TEST_CASE("adding/removing a single item to queue","[interface]") {
     /*
