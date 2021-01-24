@@ -21,12 +21,14 @@ add_library(catch_main "${CMAKE_CURRENT_LIST_DIR}/catchMain.cpp")
 # Create the test target
 add_executable(tests
         "${CMAKE_CURRENT_LIST_DIR}/test_synchronous_testbench.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/interfaces/test_IOInterface.cpp"
         )
 
 # verilate and link the d-flipflop library to the test
 verilate(tests SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v" TRACE )
 
 target_link_libraries(tests PUBLIC
+        interfaces
         catch_main)
 
 

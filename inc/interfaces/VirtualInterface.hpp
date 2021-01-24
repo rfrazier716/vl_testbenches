@@ -9,13 +9,12 @@
 
 namespace tb{
     namespace interface {
-
         class BaseInterface {
             //virtual interface is an abstract class for interfaces, must have a pre_tick and post_tick function
+        public:
             virtual void pre_tick()=0;
             virtual void post_tick()=0;
         };
-
 
         template <class PAYLOAD>
         class IOInterface: public BaseInterface{
@@ -24,23 +23,27 @@ namespace tb{
              * the dut BUS that is sampled/driven to generate data
              */
         public:
-            IOInterface(int& bus_wire);
+            bool queue_empty(){return queue_.empty();}
+            void enqueue(const PAYLOAD& data);
+            void dequeue(PAYLOAD& data);
+
         private:
-            int& bus_; //The bus being sampled
-            std::queue<PAYLOAD> payload_; // a queue of processed output
+            std::queue<PAYLOAD> queue_; // a queue of processed output
         };
 
         template<class PAYLOAD>
-        IOInterface<PAYLOAD>::IOInterface(int &bus_wire) {
-            bus_ = bus_wire;
+        void IOInterface<PAYLOAD>::enqueue(const PAYLOAD &data) {
+            queue_.push(data);
         }
 
-        template <class PAYLOAD>
-        class OutputInterface: public IOInterface<PAYLOAD>{
-        public:
-        };
+        template<class PAYLOAD>
+        void IOInterface<PAYLOAD>::dequeue(PAYLOAD &data) {
+            if(!this->queue_empty()) {
+                data = queue_.front(); //assign the front to the queue reference
+                queue_.pop(); //pop an element off the queue
+            }
+        }
     }
-
 }
 
 #endif //VL_TESTBENCHES_VIRTUALINTERFACE_H
