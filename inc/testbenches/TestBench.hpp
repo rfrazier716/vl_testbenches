@@ -3,16 +3,7 @@
 
 #include <memory> // for smart
 #include "Tracer.hpp"
-
-//If the clock line wasn't already defined in the parent file define it here
-#ifndef CLOCK_LINE
-    #define CLOCK_LINE i_clk
-#endif
-// If the reset line was not defined already define it here
-// define TB_NO_RESET if the dut does not have a reset handler, to avoid a compiler error
-#ifndef RST_LINE
-    #define RST_LINE    reset
-#endif
+#include "interfaces/VirtualInterface.hpp"
 
 
 namespace tb {
@@ -43,6 +34,9 @@ namespace tb {
         double get_timestamp(){return timestamp_;}
 
     private:
+        std::vector<interface::BaseInterface *> interfaces_;
+        void execute_interface_pre_tick();
+        void execute_interface_post_tick();
         // a Tracer class to write DUT output
         std::unique_ptr<Tracer<DUT>> tracer_;
 
@@ -57,7 +51,9 @@ namespace tb {
         //make the constructor private so the templating flows properly (only child who is friend can call parent)
         TestBench();
         friend CHILD;
+
     protected:
+        void attach(interface::BaseInterface* interface); // attach an interface to the testbench
         // The dut is protected so inherited testbenches can directly access it
         std::unique_ptr<DUT> dut_; //the verilated object that's tested
 
@@ -67,6 +63,25 @@ namespace tb {
         void post_falling_edge(){};
 
     };
+
+    template<class CHILD, class DUT>
+    void TestBench<CHILD, DUT>::execute_interface_pre_tick() {
+        for(auto interface: interfaces_){
+            interface->pre_tick();
+        }
+    }
+
+    template<class CHILD, class DUT>
+    void TestBench<CHILD, DUT>::execute_interface_post_tick() {
+        for(auto interface: interfaces_){
+            interface->post_tick();
+        }
+    }
+
+    template<class CHILD, class DUT>
+    void TestBench<CHILD, DUT>::attach(interface::BaseInterface *interface) {
+        interfaces_.push_back(interface);
+    }
 
     template<class CHILD, typename DUT>
     TestBench<CHILD, DUT>::TestBench(): clock_frequency_(100), clock_phase_t_(500 / clock_frequency_) {
@@ -92,6 +107,7 @@ namespace tb {
         // capture input before the clock's rising edge
         timestamp_ = 2*tick_count_*clock_phase_t_ -2;
         Accessor::do_pre_rising(self);
+        execute_interface_pre_tick(); // run the pre-tick operations for all interfaces
         self->set_clock(0); //verify the clock is driven low
         dut_->eval();
         tracer_->dump_state(timestamp_); //dump the inputs as being applied 2ns before the clock edge
@@ -102,6 +118,7 @@ namespace tb {
         dut_->eval();
         tracer_->dump_state(timestamp_); //Logic should instantly update on a rising edge
         Accessor::do_post_rising(self);
+        execute_interface_post_tick();  // run the post tick operations for all interfaces
 
         // drive the clock low and evaluate (falling edge)
         timestamp_+=clock_phase_t_;

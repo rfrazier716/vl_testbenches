@@ -10,38 +10,73 @@
 #include "Vd_flip_flop.h"
 #include <verilated.h>
 
+namespace {
+    class TestInterface : public tb::interface::BaseInterface {
+    public:
+        int pre_tick_count_;
+        int post_tick_count_;
 
-class FFTestBench: public tb::TestBench<FFTestBench,Vd_flip_flop>{
-public:
-    double pre_rising_timestamp_;
-    double post_rising_timestamp_;
-    double post_falling_timestamp_;
+        void pre_tick() override {
+            pre_tick_count_++;
+        }
 
-    void set_clock(uint8_t clock_value){this->dut_->i_clk = clock_value;}
-    void set_data_in(uint8_t value){ this->dut_->i_data_in = value;}
+        void post_tick() override {
+            post_tick_count_++;
+        }
 
-    void reset(){
-        this->dut_->i_rst = 1;
-        this->tick();
-        this->dut_->i_rst = 0;
-    }
+        TestInterface() {
+            pre_tick_count_ = 0;
+            post_tick_count_ = 0;
+        }
+    };
 
-    CData get_q_out(){ return this->dut_->o_q_out;}
-    CData get_nq_out(){ return this->dut_->o_nq_out;}
 
-    FFTestBench(){
-        pre_rising_timestamp_=0;
-        post_rising_timestamp_=0;
-        post_falling_timestamp_=0;
-    }
+    class FFTestBench : public tb::TestBench<FFTestBench, Vd_flip_flop> {
+    public:
+        double pre_rising_timestamp_;
+        double post_rising_timestamp_;
+        double post_falling_timestamp_;
 
-protected:
-    void pre_rising_edge(){pre_rising_timestamp_= this->timestamp_;}
-    void post_rising_edge(){post_rising_timestamp_ = this->timestamp_;}
-    void post_falling_edge(){post_falling_timestamp_= this->timestamp_;}
+        // Declare two interfaces to attach to the testbench
+        TestInterface interface_a_;
+        TestInterface interface_b_;
 
-    friend class tb::Accessor; // must be used to override protected functions
-};
+        void set_clock(uint8_t clock_value) { this->dut_->i_clk = clock_value; }
+
+        void set_data_in(uint8_t value) { this->dut_->i_data_in = value; }
+
+        void reset() {
+            this->dut_->i_rst = 1;
+            this->tick();
+            this->dut_->i_rst = 0;
+        }
+
+        CData get_q_out() { return this->dut_->o_q_out; }
+
+        CData get_nq_out() { return this->dut_->o_nq_out; }
+
+        FFTestBench() {
+            pre_rising_timestamp_ = 0;
+            post_rising_timestamp_ = 0;
+            post_falling_timestamp_ = 0;
+
+            //Attach the two interfaces to the system
+            attach(&interface_a_);
+            attach(&interface_b_);
+        }
+
+    protected:
+        void pre_rising_edge() { pre_rising_timestamp_ = this->timestamp_; }
+
+        void post_rising_edge() { post_rising_timestamp_ = this->timestamp_; }
+
+        void post_falling_edge() { post_falling_timestamp_ = this->timestamp_; }
+
+        friend class tb::Accessor; // must be used to override protected functions
+    };
+}
+
+
 
 
 TEST_CASE("Class Initialization","[testbench]"){
@@ -111,6 +146,25 @@ TEST_CASE("writing output to a VCD Trace","[testbench]"){
         tb->tick();
     }
     REQUIRE(true);
+}
+
+TEST_CASE("Executing Attached Interfaces","[testbench]"){
+    /*
+     *  all interfaces that are attached should have pre and post-tick functions executed once per tick
+     */
+    auto tb = std::make_unique<FFTestBench>();
+    for(int j=0;j<10;j++){
+        tb->tick();
+        //verify interface A's pre and post tick ran
+        REQUIRE(tb->interface_a_.pre_tick_count_==j+1);
+        REQUIRE(tb->interface_a_.post_tick_count_==j+1);
+
+        //verify interface B's pre and post tick ran
+        REQUIRE(tb->interface_b_.pre_tick_count_==j+1);
+        REQUIRE(tb->interface_b_.post_tick_count_==j+1);
+
+    }
+
 }
 
 
