@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 3.10)
 project ("vl-testbenches")
+include(CTest)
 
 # Set the build directory to be ./build
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")

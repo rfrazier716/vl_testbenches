@@ -3,4 +3,5 @@ project ("vl_interfaces")
 
 # Create a library from the source files
 add_library(interfaces
-        ${CMAKE_CURRENT_LIST_DIR}/uart/UartTransmitter.cpp)
+        ${CMAKE_CURRENT_LIST_DIR}/uart/UartTransmitter.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/uart/UartReceiver.cpp)

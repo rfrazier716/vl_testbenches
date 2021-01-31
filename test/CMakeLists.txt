@@ -1,6 +1,3 @@
-cmake_minimum_required (VERSION 3.10)
-project ("tests")
-
 # Find the Boost Library Installation
 find_package(Boost REQUIRED COMPONENTS system)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -29,6 +26,7 @@ verilate(test_testbenches SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v" 
 add_library(test_interfaces OBJECT
         "${CMAKE_CURRENT_LIST_DIR}/interfaces/test_IOInterface.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/interfaces/uart/test_UartTransmitter.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/interfaces/uart/test_UartReceiver.cpp"
         )
 
 target_link_libraries(test_interfaces interfaces)
@@ -39,14 +37,16 @@ target_link_libraries(tests PUBLIC
         )
 
 
-# Register Ctests
-set(TEST_TAGS "[testbench]")
+catch_discover_tests(tests)
 
-foreach(tag ${TEST_TAGS})
-    catch_discover_tests(tests
-            TEST_SPEC "${tag}"
-            TEST_PREFIX "${tag}-")
-endforeach()
+## Register Ctests
+#set(TEST_TAGS "[testbench]")
+#
+#foreach(tag ${TEST_TAGS})
+#    catch_discover_tests(tests
+#            TEST_SPEC "${tag}"
+#            TEST_PREFIX "${tag}-")
+#endforeach()
 
 
 
