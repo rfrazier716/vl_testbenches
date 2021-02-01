@@ -63,6 +63,19 @@ namespace tb{
         private:
             int data_packet_=0;
         };
+
+        class Uart: public BaseInterface{
+        private:
+            UartReceiver receiver;
+            UartTransmitter transmitter;
+        public:
+            void pre_tick() override{receiver.pre_tick();}
+            void post_tick() override{transmitter.post_tick();}
+            void write_byte(const char to_write);
+
+            bool byte_available(){ return transmitter.byte_available();}
+            char read_byte(){return transmitter.pop_byte();}
+        };
     }
 }
 #endif //VL_TESTBENCHES_UART_HPP
