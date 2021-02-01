@@ -25,8 +25,7 @@ verilate(test_testbenches SOURCES "${CMAKE_CURRENT_LIST_DIR}/rtl/d_flip_flop.v" 
 
 add_library(test_interfaces OBJECT
         "${CMAKE_CURRENT_LIST_DIR}/interfaces/test_IOInterface.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/interfaces/uart/test_UartTransmitter.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/interfaces/uart/test_UartReceiver.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/interfaces/test_uart.cpp"
         )
 
 target_link_libraries(test_interfaces interfaces)
