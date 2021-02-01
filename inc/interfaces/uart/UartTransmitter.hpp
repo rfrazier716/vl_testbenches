@@ -28,8 +28,8 @@ namespace tb{
 
 
         private:
-            State tx_state_;
-            int tx_counter_; //a counter for how long the transmitter has been in the state
+            State tx_state_=State::ST_IDLE;
+            int tx_counter_= 0; //a counter for how long the transmitter has been in the state
             char byte_in_progress_='\0'; // holds the current byte being transmitted out
             const int baud_clock_; // how many ticks per bit of data
             int tx_bit_shift_; //shifts the incoming data to the correct bit

@@ -22,7 +22,7 @@ namespace {
     };
 }
 
-TEST_CASE("adding/removing a single item to queue","[interface]") {
+TEST_CASE("adding and removing a single item to queue","[interface]") {
     /*
      *  Testing adding and removing a single queue element
      */
