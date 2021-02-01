@@ -7,7 +7,6 @@
 #include <memory>
 #include <catch2/catch.hpp>
 #include "interfaces/VirtualInterface.hpp"
-#include "interfaces/uart/UartTransmitter.hpp"
 
 // Wrap class definitions in anonymous namespace so they're not accessible to other translation units
 namespace {

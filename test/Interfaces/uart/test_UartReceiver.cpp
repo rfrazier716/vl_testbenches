@@ -2,7 +2,7 @@
 // Created by rfraz on 1/31/2021.
 //
 
-#include "interfaces/uart/UartReceiver.hpp"
+#include "interfaces/uart.hpp"
 
 #include <catch2/catch.hpp>
 #include <memory>
